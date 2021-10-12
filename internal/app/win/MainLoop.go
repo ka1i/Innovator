@@ -3,7 +3,6 @@ package win
 import (
 	"fmt"
 	"log"
-	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -64,14 +63,22 @@ func makeVAO() uint32 {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)                                               //把新创建的缓冲绑定到GL_ARRAY_BUFFER目标
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW) //把用户定义的数据复制到当前绑定缓冲
 
-	var ebo uint32
-	gl.GenBuffers(1, &ebo)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
+	// var ebo uint32
+	// gl.GenBuffers(1, &ebo)
+	// gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	// gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
 
 	// 设置顶点属性指针
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+	// gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+	// gl.EnableVertexAttribArray(0)
+
+	// 流光溢彩
+	//位置属性
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(0))
 	gl.EnableVertexAttribArray(0)
+	// 颜色属性
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(3*4))
+	gl.EnableVertexAttribArray(1)
 
 	return vao
 }
@@ -110,18 +117,10 @@ func MainLoop() {
 		// render window
 		gl.UseProgram(program)
 
-		// dynamic color
-		vertexColorLocation := gl.GetUniformLocation(program, gl.Str("ourColor\x00"))
-		var dynamicR float64 = (math.Sin(currentTime) / 2.0)
-		var dynamicG float64 = (math.Cos(currentTime) / 2.0)
-		var dynamicB float64 = (math.Tan(currentTime) / 2.0)
-		// 3f: R G B A
-		gl.Uniform4f(vertexColorLocation, float32(dynamicR), float32(dynamicG), float32(dynamicB), 1.0)
-
 		gl.BindVertexArray(vao)
-		//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
-		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
-		gl.BindVertexArray(0)
+		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
+		// gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+		// gl.BindVertexArray(0)
 
 		//检查调用事件，交换缓冲
 		w.SwapBuffers()
