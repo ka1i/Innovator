@@ -1,6 +1,7 @@
 package win
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 
@@ -18,11 +19,28 @@ func init() {
 
 func MainLoop() {
 	w := initWindow()
+
+	// openGL viewport init
+	width, height := w.GetFramebufferSize()
+	gl.Viewport(0, 0, int32(width), int32(height))
+	w.SetFramebufferSizeCallback(framebuffer_size_callback)
+
+	// disable vsync
+	glfw.SwapInterval(0)
+
 	// render loop
+	fpsTracker := glfw.GetTime()
 	for !w.ShouldClose() {
+		// fps
+		currentTime := glfw.GetTime()
+		fpsTime := currentTime - fpsTracker
+		fpsTracker = currentTime
+		fps := int(1 / fpsTime)
+		fmt.Printf("fps:%d/s\n", fps)
+
+		// loop
 		renderLoop(w)
 	}
-
 }
 
 func initWindow() *glfw.Window {
@@ -63,4 +81,8 @@ func renderLoop(w *glfw.Window) {
 	//检查调用事件，交换缓冲
 	w.SwapBuffers()
 	glfw.PollEvents()
+}
+
+func framebuffer_size_callback(window *glfw.Window, width int, height int) {
+	gl.Viewport(0, 0, int32(width), int32(height))
 }
