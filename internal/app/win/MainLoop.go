@@ -63,22 +63,20 @@ func makeVAO() uint32 {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)                                               //把新创建的缓冲绑定到GL_ARRAY_BUFFER目标
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW) //把用户定义的数据复制到当前绑定缓冲
 
-	// var ebo uint32
-	// gl.GenBuffers(1, &ebo)
-	// gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
-	// gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
+	var ebo uint32
+	gl.GenBuffers(1, &ebo)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
 
-	// 设置顶点属性指针
-	// gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
-	// gl.EnableVertexAttribArray(0)
-
-	// 流光溢彩
-	//位置属性
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(0))
+	// position attribute
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(0))
 	gl.EnableVertexAttribArray(0)
-	// 颜色属性
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 6*4, gl.PtrOffset(3*4))
+	// color attribute
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(3*4))
 	gl.EnableVertexAttribArray(1)
+	// texture coord attribute
+	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
+	gl.EnableVertexAttribArray(2)
 
 	return vao
 }
@@ -95,6 +93,12 @@ func MainLoop() {
 	}
 
 	vao := makeVAO()
+
+	// Load the texture
+	texture, err := graphical.NewTexture("container.jpeg")
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	//线框模式(Wireframe Mode)
 	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
@@ -117,10 +121,15 @@ func MainLoop() {
 		// render window
 		gl.UseProgram(program)
 
+		gl.BindTexture(gl.TEXTURE_2D, texture)
 		gl.BindVertexArray(vao)
-		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
+		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+		//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
 		// gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 		// gl.BindVertexArray(0)
+
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_2D, texture)
 
 		//检查调用事件，交换缓冲
 		w.SwapBuffers()
