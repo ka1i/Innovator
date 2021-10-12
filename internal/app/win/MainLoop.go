@@ -17,32 +17,6 @@ func init() {
 	runtime.LockOSThread()
 }
 
-func MainLoop() {
-	w := initWindow()
-
-	// openGL viewport init
-	width, height := w.GetFramebufferSize()
-	gl.Viewport(0, 0, int32(width), int32(height))
-	w.SetFramebufferSizeCallback(framebuffer_size_callback)
-
-	// disable vsync
-	glfw.SwapInterval(0)
-
-	// render loop
-	fpsTracker := glfw.GetTime()
-	for !w.ShouldClose() {
-		// fps
-		currentTime := glfw.GetTime()
-		fpsTime := currentTime - fpsTracker
-		fpsTracker = currentTime
-		fps := int(1 / fpsTime)
-		fmt.Printf("fps:%d/s\n", fps)
-
-		// loop
-		renderLoop(w)
-	}
-}
-
 func initWindow() *glfw.Window {
 	// glfw hint setup
 	hint := graphical.WindowHint()
@@ -67,20 +41,73 @@ func initWindow() *glfw.Window {
 	log.Printf("GLFW: %s \n", glfw.GetVersionString())
 	log.Printf("openGL: %s \n", gl.GoStr(gl.GetString(gl.VERSION)))
 
+	// openGL viewport init
+	width, height := w.GetFramebufferSize()
+	gl.Viewport(0, 0, int32(width), int32(height))
+	w.SetFramebufferSizeCallback(framebuffer_size_callback)
+
+	// disable vsync
+	glfw.SwapInterval(0)
+
 	return w
 }
 
-func renderLoop(w *glfw.Window) {
-	// event process
-	events.Keyboard(w)
+func makeVAO() uint32 {
+	//连接顶点属性
+	var vao uint32
+	gl.GenVertexArrays(1, &vao)
+	gl.BindVertexArray(vao)
 
-	// glfw background
-	gl.ClearColor(0.98, 0.98, 0.98, 0.7)                //状态设置
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) //状态使用
+	var vbo uint32
+	gl.GenBuffers(1, &vbo)                                                            //创建顶点缓冲对象，绑定id
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)                                               //把新创建的缓冲绑定到GL_ARRAY_BUFFER目标
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW) //把用户定义的数据复制到当前绑定缓冲
 
-	//检查调用事件，交换缓冲
-	w.SwapBuffers()
-	glfw.PollEvents()
+	// 设置顶点属性指针
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+	gl.EnableVertexAttribArray(0)
+
+	return vao
+}
+
+func MainLoop() {
+	w := initWindow()
+
+	// Render Loop
+	fpsTracker := glfw.GetTime()
+
+	program, err := graphical.NewProgram(vertexShaderSource, fragmentShaderSource)
+	if err != nil {
+		panic(err)
+	}
+
+	vao := makeVAO()
+
+	for !w.ShouldClose() {
+		// fps
+		currentTime := glfw.GetTime()
+		fpsTime := currentTime - fpsTracker
+		fpsTracker = currentTime
+		fps := int(1 / fpsTime)
+		fmt.Printf("fps:%d/s\n", fps)
+
+		// glfw background
+		gl.ClearColor(0.2, 0.3, 0.4, 1)                     //状态设置
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) //状态使用
+
+		// event process
+		events.Keyboard(w)
+
+		// render window
+		gl.UseProgram(program)
+		gl.BindVertexArray(vao)
+		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
+
+		//检查调用事件，交换缓冲
+		w.SwapBuffers()
+		glfw.PollEvents()
+	}
+	glfw.Terminate()
 }
 
 func framebuffer_size_callback(window *glfw.Window, width int, height int) {
