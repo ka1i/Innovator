@@ -3,6 +3,7 @@ package win
 import (
 	"fmt"
 	"log"
+	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -89,7 +90,7 @@ func MainLoop() {
 	vao := makeVAO()
 
 	//线框模式(Wireframe Mode)
-	gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 
 	for !w.ShouldClose() {
 		// fps
@@ -108,6 +109,15 @@ func MainLoop() {
 
 		// render window
 		gl.UseProgram(program)
+
+		// dynamic color
+		vertexColorLocation := gl.GetUniformLocation(program, gl.Str("ourColor\x00"))
+		var dynamicR float64 = (math.Sin(currentTime) / 2.0)
+		var dynamicG float64 = (math.Cos(currentTime) / 2.0)
+		var dynamicB float64 = (math.Tan(currentTime) / 2.0)
+		// 3f: R G B A
+		gl.Uniform4f(vertexColorLocation, float32(dynamicR), float32(dynamicG), float32(dynamicB), 1.0)
+
 		gl.BindVertexArray(vao)
 		//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
 		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
