@@ -63,6 +63,11 @@ func makeVAO() uint32 {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)                                               //把新创建的缓冲绑定到GL_ARRAY_BUFFER目标
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW) //把用户定义的数据复制到当前绑定缓冲
 
+	var ebo uint32
+	gl.GenBuffers(1, &ebo)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
+
 	// 设置顶点属性指针
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
 	gl.EnableVertexAttribArray(0)
@@ -83,6 +88,9 @@ func MainLoop() {
 
 	vao := makeVAO()
 
+	//线框模式(Wireframe Mode)
+	gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+
 	for !w.ShouldClose() {
 		// fps
 		currentTime := glfw.GetTime()
@@ -101,7 +109,9 @@ func MainLoop() {
 		// render window
 		gl.UseProgram(program)
 		gl.BindVertexArray(vao)
-		gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
+		//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
+		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+		gl.BindVertexArray(0)
 
 		//检查调用事件，交换缓冲
 		w.SwapBuffers()
