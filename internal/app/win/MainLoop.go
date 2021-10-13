@@ -1,7 +1,6 @@
 package win
 
 import (
-	"fmt"
 	"log"
 	"runtime"
 
@@ -85,8 +84,6 @@ func MainLoop() {
 	w := initWindow()
 
 	// Render Loop
-	fpsTracker := glfw.GetTime()
-
 	program, err := graphical.NewProgram(vertexShaderSource, fragmentShaderSource)
 	if err != nil {
 		panic(err)
@@ -101,15 +98,19 @@ func MainLoop() {
 	}
 
 	//线框模式(Wireframe Mode)
-	// gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 
+	var fps uint = 0
+	fpsTracker := glfw.GetTime()
 	for !w.ShouldClose() {
 		// fps
 		currentTime := glfw.GetTime()
-		fpsTime := currentTime - fpsTracker
-		fpsTracker = currentTime
-		fps := int(1 / fpsTime)
-		fmt.Printf("fps:%d/s\n", fps)
+		if currentTime-fpsTracker >= 1.0 {
+			log.Printf("fps:%d/s\n", fps)
+			fpsTracker = currentTime
+			fps = 0
+		}
+		fps++
 
 		// glfw background
 		gl.ClearColor(0.2, 0.3, 0.4, 1)                     //状态设置
