@@ -4,10 +4,10 @@ var (
 	//顶点输入
 	vertices = []float32{
 		//-- 位置 --   ---- 颜色 ----  - 纹理坐标 -
-		0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-		0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
-		-0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-		-0.5, 0.5, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+		0.5, 0.5, 0.0, 0.2, 0.0, 0.2, 1.0, 1.0,
+		0.5, -0.5, 0.0, 0.5, 0.5, 0.0, 1.0, 0.0,
+		-0.5, -0.5, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0,
+		-0.5, 0.5, 0.0, 0.9, 0.0, 0.9, 0.0, 1.0,
 	}
 	// //索引缓冲对象
 	indices = []int32{
@@ -47,7 +47,7 @@ const (
 
 		void main()
 		{
-			fragmentColor = mix(texture(texture1, TexCoord), texture(texture2, vec2(1.0 - TexCoord.x, TexCoord.y)), 0.37) * vec4(vertexColor, 1.0);
+			fragmentColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2) * vec4(vertexColor, 1.0);
 		} 
 	` + "\x00"
 )

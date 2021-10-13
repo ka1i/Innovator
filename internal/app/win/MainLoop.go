@@ -20,6 +20,7 @@ func initWindow() *glfw.Window {
 	// glfw hint setup
 	hint := graphical.WindowHint()
 	hint.Title("Innovator: Hello World")
+	hint.Size(800, 600)
 	hint.Resizable()
 
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)                //OpenGL大版本
