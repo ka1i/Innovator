@@ -58,9 +58,9 @@ func makeVAO() uint32 {
 	gl.BindVertexArray(vao)
 
 	var vbo uint32
-	gl.GenBuffers(1, &vbo)                                                            //创建顶点缓冲对象，绑定id
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)                                               //把新创建的缓冲绑定到GL_ARRAY_BUFFER目标
-	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW) //把用户定义的数据复制到当前绑定缓冲
+	gl.GenBuffers(1, &vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
 	var ebo uint32
 	gl.GenBuffers(1, &ebo)
@@ -92,7 +92,11 @@ func MainLoop() {
 	vao := makeVAO()
 
 	// Load the texture
-	texture, err := graphical.NewTexture("container.jpeg")
+	texture1, err := graphical.NewTexture("container.jpeg")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	texture2, err := graphical.NewTexture("awesomeface.png")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -122,15 +126,19 @@ func MainLoop() {
 		// render window
 		gl.UseProgram(program)
 
-		gl.BindTexture(gl.TEXTURE_2D, texture)
-		gl.BindVertexArray(vao)
-		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
-		//gl.DrawArrays(gl.TRIANGLES, 0, int32(len(vertices)/3))
-		// gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
-		// gl.BindVertexArray(0)
+		// texture unit
+		gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("texture1\x00")), 0)
+		gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("texture2\x00")), 1)
 
 		gl.ActiveTexture(gl.TEXTURE0)
-		gl.BindTexture(gl.TEXTURE_2D, texture)
+		gl.BindTexture(gl.TEXTURE_2D, texture1)
+
+		gl.ActiveTexture(gl.TEXTURE1)
+		gl.BindTexture(gl.TEXTURE_2D, texture2)
+
+		// bind vao
+		gl.BindVertexArray(vao)
+		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 
 		//检查调用事件，交换缓冲
 		w.SwapBuffers()

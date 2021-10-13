@@ -42,11 +42,12 @@ const (
 		in vec3 vertexColor; // 从顶点着色器传来的输入变量（名称相同、类型相同）
 		in vec2 TexCoord;
 
-		uniform sampler2D ourTexture;
+		uniform sampler2D texture1;
+		uniform sampler2D texture2;
 
 		void main()
 		{
-			fragmentColor = texture(ourTexture, TexCoord) * vec4(vertexColor, 1.0);
+			fragmentColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.37) * vec4(vertexColor, 1.0);
 		} 
 	` + "\x00"
 )

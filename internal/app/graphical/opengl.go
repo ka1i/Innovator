@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/draw"
 	_ "image/jpeg"
+	_ "image/png"
 	"os"
 	"runtime"
 	"strings"
@@ -95,7 +96,9 @@ func NewTexture(file string) (uint32, error) {
 	if rgba.Stride != rgba.Rect.Size().X*4 {
 		return 0, fmt.Errorf("unsupported stride")
 	}
-	draw.Draw(rgba, rgba.Bounds(), img, image.Point{0, 0}, draw.Src)
+	flipImg := vFlip(img)
+
+	draw.Draw(rgba, rgba.Bounds(), flipImg, image.Point{0, 0}, draw.Src)
 
 	var texture uint32
 	gl.GenTextures(1, &texture)
@@ -117,4 +120,16 @@ func NewTexture(file string) (uint32, error) {
 		gl.Ptr(rgba.Pix))
 
 	return texture, nil
+}
+
+func vFlip(m image.Image) image.Image {
+	mb := m.Bounds()
+	flip := image.NewRGBA(image.Rect(0, 0, mb.Dx(), mb.Dy()))
+	for x := mb.Min.X; x < mb.Max.X; x++ {
+		for y := mb.Min.Y; y < mb.Max.Y; y++ {
+			// 设置像素点，此调换了Y坐标以达到垂直翻转的目的
+			flip.Set(x, mb.Max.Y-y, m.At(x, y))
+		}
+	}
+	return flip
 }
