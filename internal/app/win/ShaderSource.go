@@ -47,7 +47,7 @@ const (
 
 		void main()
 		{
-			fragmentColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.37) * vec4(vertexColor, 1.0);
+			fragmentColor = mix(texture(texture1, TexCoord), texture(texture2, vec2(1.0 - TexCoord.x, TexCoord.y)), 0.37) * vec4(vertexColor, 1.0);
 		} 
 	` + "\x00"
 )
