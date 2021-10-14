@@ -46,7 +46,13 @@ func initWindow() *glfw.Window {
 	// openGL viewport init
 	width, height := w.GetFramebufferSize()
 	gl.Viewport(0, 0, int32(width), int32(height))
-	w.SetFramebufferSizeCallback(framebuffer_size_callback)
+
+	// events register
+	w.SetFramebufferSizeCallback(events.FramebufferSizeCallback)
+	w.SetInputMode(glfw.CursorMode, glfw.CursorDisabled)
+	w.SetKeyCallback(events.KeyCallback)
+	w.SetMouseButtonCallback(events.MouseButtonCallback)
+	w.SetCursorPosCallback(events.CursorPosCallback)
 
 	// disable vsync
 	glfw.SwapInterval(0)
@@ -124,7 +130,7 @@ func MainLoop() {
 		// fps
 		currentTime := glfw.GetTime()
 		if currentTime-fpsTracker >= 1.0 {
-			log.Printf("fps:%d/s\n", fps)
+			log.Printf("*** Exit Press Esc *** fps:%d/s\n", fps)
 			fpsTracker = currentTime
 			fps = 0
 		}
@@ -133,9 +139,6 @@ func MainLoop() {
 		// glfw background
 		gl.ClearColor(0.2, 0.3, 0.4, 1)                     //状态设置
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) //状态使用
-
-		// event process
-		events.Keyboard(w)
 
 		// render window
 		gl.UseProgram(program)
@@ -184,8 +187,4 @@ func MainLoop() {
 		glfw.PollEvents()
 	}
 	glfw.Terminate()
-}
-
-func framebuffer_size_callback(window *glfw.Window, width int, height int) {
-	gl.Viewport(0, 0, int32(width), int32(height))
 }
