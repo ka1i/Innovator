@@ -2,6 +2,7 @@ package win
 
 import (
 	"log"
+	"math"
 	"runtime"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -157,7 +158,10 @@ func MainLoop() {
 		projectionLoc := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 		gl.UniformMatrix4fv(projectionLoc, 1, false, &projection[0])
 
-		camera = camera.Mul4(mgl32.Translate3D(0, 0, -6))
+		radius := 100.0
+		cameraX := math.Sin(glfw.GetTime()) * radius
+		cameraZ := math.Cos(glfw.GetTime()) * radius
+		camera = mgl32.LookAtV(mgl32.Vec3{float32(cameraX), 0, float32(cameraZ)}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
 		cameraLoc := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 		gl.UniformMatrix4fv(cameraLoc, 1, false, &camera[0])
 
