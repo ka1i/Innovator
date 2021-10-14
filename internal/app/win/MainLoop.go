@@ -73,11 +73,11 @@ func makeVAO() uint32 {
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
 	gl.EnableVertexAttribArray(0)
 	// color attribute
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
 	gl.EnableVertexAttribArray(1)
-	// // texture coord attribute
-	// gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
-	// gl.EnableVertexAttribArray(2)
+	// texture coord attribute
+	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
+	gl.EnableVertexAttribArray(2)
 
 	return vao
 }
@@ -107,7 +107,6 @@ func MainLoop() {
 
 	projection := mgl32.Mat4{}
 	camera := mgl32.Mat4{}
-	model := mgl32.Mat4{}
 
 	//线框模式(Wireframe Mode)
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
@@ -148,15 +147,10 @@ func MainLoop() {
 		// projection * camera * model
 		projection = mgl32.Ident4()
 		camera = mgl32.Ident4()
-		model = mgl32.Ident4()
 
 		projection = mgl32.Perspective(mgl32.DegToRad(45), float32(width/height), 0.1, 100)
 		projectionLoc := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 		gl.UniformMatrix4fv(projectionLoc, 1, false, &projection[0])
-
-		model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()*float64(mgl32.DegToRad(50.0))), mgl32.Vec3{0.5, 1, 0}))
-		modelLoc := gl.GetUniformLocation(program, gl.Str("model\x00"))
-		gl.UniformMatrix4fv(modelLoc, 1, false, &model[0])
 
 		camera = camera.Mul4(mgl32.Translate3D(0, 0, -3))
 		cameraLoc := gl.GetUniformLocation(program, gl.Str("camera\x00"))
@@ -164,9 +158,17 @@ func MainLoop() {
 
 		// bind vao
 		gl.BindVertexArray(vao)
-		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+		//gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+		for k, v := range cubePositions {
+			model := mgl32.Ident4()
+			model = model.Mul4(mgl32.Translate3D(v.Elem()))
+			model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()*float64(k)), mgl32.Vec3{1, 0.3, 0.5}))
 
-		gl.DrawArrays(gl.TRIANGLES, 0, 36)
+			modelLoc := gl.GetUniformLocation(program, gl.Str("model\x00"))
+			gl.UniformMatrix4fv(modelLoc, 1, false, &model[0])
+
+			gl.DrawArrays(gl.TRIANGLES, 0, 36)
+		}
 
 		//检查调用事件，交换缓冲
 		w.SwapBuffers()
