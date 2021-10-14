@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/ka1i/innovator/internal/app/events"
 	"github.com/ka1i/innovator/internal/app/graphical"
 )
@@ -102,6 +103,8 @@ func MainLoop() {
 		log.Fatalln(err)
 	}
 
+	transform := mgl32.Mat4{} //0矩阵
+
 	//线框模式(Wireframe Mode)
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 
@@ -136,6 +139,12 @@ func MainLoop() {
 
 		gl.ActiveTexture(gl.TEXTURE1)
 		gl.BindTexture(gl.TEXTURE_2D, texture2)
+
+		transform = mgl32.Ident4()
+		transform = transform.Mul4(mgl32.Translate3D(0.5, -0.5, 0.0))
+		transform = transform.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{0, 0, 1}))
+		transformLoc := gl.GetUniformLocation(program, gl.Str("transform\x00"))
+		gl.UniformMatrix4fv(transformLoc, 1, false, &transform[0])
 
 		// bind vao
 		gl.BindVertexArray(vao)
