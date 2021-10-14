@@ -114,6 +114,7 @@ func MainLoop() {
 
 	var fps uint = 0
 	fpsTracker := glfw.GetTime()
+	var status bool = true
 	for !w.ShouldClose() {
 		// fps
 		currentTime := glfw.GetTime()
@@ -121,6 +122,12 @@ func MainLoop() {
 			log.Printf("fps:%d/s\n", fps)
 			fpsTracker = currentTime
 			fps = 0
+			if status {
+				gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+			} else {
+				gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+			}
+			status = !status
 		}
 		fps++
 
@@ -149,15 +156,15 @@ func MainLoop() {
 		camera = mgl32.Ident4()
 		model = mgl32.Ident4()
 
-		projection = mgl32.Perspective(mgl32.DegToRad(40.0), float32(width/height), 0.1, 10)
+		projection = mgl32.Perspective(float32(glfw.GetTime()), float32(width/height), 0.1, 10)
 		projectionLoc := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 		gl.UniformMatrix4fv(projectionLoc, 1, false, &projection[0])
 
-		model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{1, 0, 0}))
+		model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{0, 0, 1}))
 		modelLoc := gl.GetUniformLocation(program, gl.Str("model\x00"))
 		gl.UniformMatrix4fv(modelLoc, 1, false, &model[0])
 
-		camera = camera.Mul4(mgl32.Translate3D(0, 0, -3))
+		camera = camera.Mul4(mgl32.LookAtV(mgl32.Vec3{3, 3, 3}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}))
 		cameraLoc := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 		gl.UniformMatrix4fv(cameraLoc, 1, false, &camera[0])
 
