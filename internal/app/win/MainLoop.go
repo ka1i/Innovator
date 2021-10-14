@@ -141,8 +141,10 @@ func MainLoop() {
 		gl.BindTexture(gl.TEXTURE_2D, texture2)
 
 		transform = mgl32.Ident4()
-		transform = transform.Mul4(mgl32.Translate3D(0.5, -0.5, 0.0))
+
 		transform = transform.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{0, 0, 1}))
+		transform = transform.Mul4(mgl32.Translate3D(0.5, -0.5, 0.0))
+
 		transformLoc := gl.GetUniformLocation(program, gl.Str("transform\x00"))
 		gl.UniformMatrix4fv(transformLoc, 1, false, &transform[0])
 
