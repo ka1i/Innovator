@@ -70,14 +70,14 @@ func makeVAO() uint32 {
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
 
 	// position attribute
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
 	gl.EnableVertexAttribArray(0)
 	// color attribute
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(3*4))
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
 	gl.EnableVertexAttribArray(1)
-	// texture coord attribute
-	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
-	gl.EnableVertexAttribArray(2)
+	// // texture coord attribute
+	// gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
+	// gl.EnableVertexAttribArray(2)
 
 	return vao
 }
@@ -111,10 +111,10 @@ func MainLoop() {
 
 	//线框模式(Wireframe Mode)
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+	gl.Enable(gl.DEPTH_TEST)
 
 	var fps uint = 0
 	fpsTracker := glfw.GetTime()
-	var status bool = true
 	for !w.ShouldClose() {
 		// fps
 		currentTime := glfw.GetTime()
@@ -122,12 +122,6 @@ func MainLoop() {
 			log.Printf("fps:%d/s\n", fps)
 			fpsTracker = currentTime
 			fps = 0
-			if status {
-				gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
-			} else {
-				gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
-			}
-			status = !status
 		}
 		fps++
 
@@ -156,21 +150,23 @@ func MainLoop() {
 		camera = mgl32.Ident4()
 		model = mgl32.Ident4()
 
-		projection = mgl32.Perspective(float32(glfw.GetTime()), float32(width/height), 0.1, 10)
+		projection = mgl32.Perspective(mgl32.DegToRad(45), float32(width/height), 0.1, 100)
 		projectionLoc := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 		gl.UniformMatrix4fv(projectionLoc, 1, false, &projection[0])
 
-		model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{0, 0, 1}))
+		model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()*float64(mgl32.DegToRad(50.0))), mgl32.Vec3{0.5, 1, 0}))
 		modelLoc := gl.GetUniformLocation(program, gl.Str("model\x00"))
 		gl.UniformMatrix4fv(modelLoc, 1, false, &model[0])
 
-		camera = camera.Mul4(mgl32.LookAtV(mgl32.Vec3{3, 3, 3}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0}))
+		camera = camera.Mul4(mgl32.Translate3D(0, 0, -3))
 		cameraLoc := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 		gl.UniformMatrix4fv(cameraLoc, 1, false, &camera[0])
 
 		// bind vao
 		gl.BindVertexArray(vao)
 		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+
+		gl.DrawArrays(gl.TRIANGLES, 0, 36)
 
 		//检查调用事件，交换缓冲
 		w.SwapBuffers()

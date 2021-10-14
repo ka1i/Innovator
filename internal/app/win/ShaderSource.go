@@ -3,11 +3,48 @@ package win
 var (
 	//顶点输入
 	vertices = []float32{
-		//-- 位置 --   ---- 颜色 ----  - 纹理坐标 -
-		0.5, 0.5, 0.0, 0.2, 0.0, 0.2, 1.0, 1.0,
-		0.5, -0.5, 0.0, 0.5, 0.5, 0.0, 1.0, 0.0,
-		-0.5, -0.5, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0,
-		-0.5, 0.5, 0.0, 0.9, 0.0, 0.9, 0.0, 1.0,
+		//-- 位置 --    - 纹理坐标 -
+		-0.5, -0.5, -0.5, 0.0, 0.0,
+		0.5, -0.5, -0.5, 1.0, 0.0,
+		0.5, 0.5, -0.5, 1.0, 1.0,
+		0.5, 0.5, -0.5, 1.0, 1.0,
+		-0.5, 0.5, -0.5, 0.0, 1.0,
+		-0.5, -0.5, -0.5, 0.0, 0.0,
+
+		-0.5, -0.5, 0.5, 0.0, 0.0,
+		0.5, -0.5, 0.5, 1.0, 0.0,
+		0.5, 0.5, 0.5, 1.0, 1.0,
+		0.5, 0.5, 0.5, 1.0, 1.0,
+		-0.5, 0.5, 0.5, 0.0, 1.0,
+		-0.5, -0.5, 0.5, 0.0, 0.0,
+
+		-0.5, 0.5, 0.5, 1.0, 0.0,
+		-0.5, 0.5, -0.5, 1.0, 1.0,
+		-0.5, -0.5, -0.5, 0.0, 1.0,
+		-0.5, -0.5, -0.5, 0.0, 1.0,
+		-0.5, -0.5, 0.5, 0.0, 0.0,
+		-0.5, 0.5, 0.5, 1.0, 0.0,
+
+		0.5, 0.5, 0.5, 1.0, 0.0,
+		0.5, 0.5, -0.5, 1.0, 1.0,
+		0.5, -0.5, -0.5, 0.0, 1.0,
+		0.5, -0.5, -0.5, 0.0, 1.0,
+		0.5, -0.5, 0.5, 0.0, 0.0,
+		0.5, 0.5, 0.5, 1.0, 0.0,
+
+		-0.5, -0.5, -0.5, 0.0, 1.0,
+		0.5, -0.5, -0.5, 1.0, 1.0,
+		0.5, -0.5, 0.5, 1.0, 0.0,
+		0.5, -0.5, 0.5, 1.0, 0.0,
+		-0.5, -0.5, 0.5, 0.0, 0.0,
+		-0.5, -0.5, -0.5, 0.0, 1.0,
+
+		-0.5, 0.5, -0.5, 0.0, 1.0,
+		0.5, 0.5, -0.5, 1.0, 1.0,
+		0.5, 0.5, 0.5, 1.0, 0.0,
+		0.5, 0.5, 0.5, 1.0, 0.0,
+		-0.5, 0.5, 0.5, 0.0, 0.0,
+		-0.5, 0.5, -0.5, 0.0, 1.0,
 	}
 	// //索引缓冲对象
 	indices = []int32{
@@ -22,10 +59,8 @@ const (
 	vertexShaderSource = `
 		#version 330 core
 		layout (location = 0) in vec3 aPos;   // 位置变量的属性位置值为 0 
-		layout (location = 1) in vec3 aColor; // 颜色变量的属性位置值为 1
-		layout (location = 2) in vec2 aTexCoord;
+		layout (location = 1) in vec2 aTexCoord;
 
-		out vec3 vertexColor;
 		out vec2 TexCoord;
 
 		uniform mat4 projection;
@@ -35,7 +70,6 @@ const (
 		void main()
 		{
 			gl_Position = projection * camera * model * vec4(aPos, 1.0);
-			vertexColor = aColor;
 			TexCoord = aTexCoord;
 		}	
 	` + "\x00"
@@ -43,7 +77,6 @@ const (
 	fragmentShaderSource = `
 		#version 330 core
 		out vec4 fragmentColor;
-		in vec3 vertexColor; // 从顶点着色器传来的输入变量（名称相同、类型相同）
 		in vec2 TexCoord;
 
 		uniform sampler2D texture1;
@@ -51,7 +84,7 @@ const (
 
 		void main()
 		{
-			fragmentColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2) * vec4(vertexColor, 1.0);
+			fragmentColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);
 		} 
 	` + "\x00"
 )
