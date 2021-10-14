@@ -105,12 +105,17 @@ func MainLoop() {
 
 	width, height := w.GetFramebufferSize()
 
+	gl.UseProgram(program)
+
 	projection := mgl32.Mat4{}
 	camera := mgl32.Mat4{}
 
 	//线框模式(Wireframe Mode)
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
 	gl.Enable(gl.DEPTH_TEST)
+	gl.DepthFunc(gl.LESS)
+
+	gl.BindFragDataLocation(program, 0, gl.Str("fragmentColor\x00"))
 
 	var fps uint = 0
 	fpsTracker := glfw.GetTime()
@@ -148,11 +153,11 @@ func MainLoop() {
 		projection = mgl32.Ident4()
 		camera = mgl32.Ident4()
 
-		projection = mgl32.Perspective(mgl32.DegToRad(45), float32(width/height), 0.1, 100)
+		projection = mgl32.Perspective(mgl32.DegToRad(60), float32(width/height), 0.1, 100)
 		projectionLoc := gl.GetUniformLocation(program, gl.Str("projection\x00"))
 		gl.UniformMatrix4fv(projectionLoc, 1, false, &projection[0])
 
-		camera = camera.Mul4(mgl32.Translate3D(0, 0, -3))
+		camera = camera.Mul4(mgl32.Translate3D(0, 0, -6))
 		cameraLoc := gl.GetUniformLocation(program, gl.Str("camera\x00"))
 		gl.UniformMatrix4fv(cameraLoc, 1, false, &camera[0])
 
@@ -162,7 +167,7 @@ func MainLoop() {
 		for k, v := range cubePositions {
 			model := mgl32.Ident4()
 			model = model.Mul4(mgl32.Translate3D(v.Elem()))
-			model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()*float64(k)), mgl32.Vec3{1, 0.3, 0.5}))
+			model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()*float64(k)), mgl32.Vec3{float32(k % 3), 0, 0}))
 
 			modelLoc := gl.GetUniformLocation(program, gl.Str("model\x00"))
 			gl.UniformMatrix4fv(modelLoc, 1, false, &model[0])
