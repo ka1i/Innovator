@@ -103,7 +103,11 @@ func MainLoop() {
 		log.Fatalln(err)
 	}
 
-	transform := mgl32.Mat4{} //0矩阵
+	width, height := w.GetFramebufferSize()
+
+	projection := mgl32.Mat4{}
+	camera := mgl32.Mat4{}
+	model := mgl32.Mat4{}
 
 	//线框模式(Wireframe Mode)
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
@@ -140,13 +144,22 @@ func MainLoop() {
 		gl.ActiveTexture(gl.TEXTURE1)
 		gl.BindTexture(gl.TEXTURE_2D, texture2)
 
-		transform = mgl32.Ident4()
+		// projection * camera * model
+		projection = mgl32.Ident4()
+		camera = mgl32.Ident4()
+		model = mgl32.Ident4()
 
-		transform = transform.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{0, 0, 1}))
-		transform = transform.Mul4(mgl32.Translate3D(0.5, -0.5, 0.0))
+		projection = mgl32.Perspective(mgl32.DegToRad(40.0), float32(width/height), 0.1, 10)
+		projectionLoc := gl.GetUniformLocation(program, gl.Str("projection\x00"))
+		gl.UniformMatrix4fv(projectionLoc, 1, false, &projection[0])
 
-		transformLoc := gl.GetUniformLocation(program, gl.Str("transform\x00"))
-		gl.UniformMatrix4fv(transformLoc, 1, false, &transform[0])
+		model = model.Mul4(mgl32.HomogRotate3D(float32(glfw.GetTime()), mgl32.Vec3{1, 0, 0}))
+		modelLoc := gl.GetUniformLocation(program, gl.Str("model\x00"))
+		gl.UniformMatrix4fv(modelLoc, 1, false, &model[0])
+
+		camera = camera.Mul4(mgl32.Translate3D(0, 0, -3))
+		cameraLoc := gl.GetUniformLocation(program, gl.Str("camera\x00"))
+		gl.UniformMatrix4fv(cameraLoc, 1, false, &camera[0])
 
 		// bind vao
 		gl.BindVertexArray(vao)
