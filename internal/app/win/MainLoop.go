@@ -58,8 +58,6 @@ func initWindow() *glfw.Window {
 	// events register
 	w.SetFramebufferSizeCallback(events.FramebufferSizeCallback)
 	w.SetKeyCallback(events.KeyCallback)
-	w.SetMouseButtonCallback(events.MouseButtonCallback)
-	w.SetCursorPosCallback(events.CursorPosCallback)
 
 	return w
 }
