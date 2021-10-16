@@ -7,14 +7,9 @@ import (
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"github.com/go-gl/mathgl/mgl32"
 	"github.com/ka1i/innovator/internal/app/events"
 	"github.com/ka1i/innovator/internal/app/graphical"
-)
-
-const (
-	Title       = "Image Viewer"
-	AspectRatio = 16.0 / 9.0
+	"github.com/ka1i/innovator/internal/pkg/base"
 )
 
 func init() {
@@ -26,8 +21,8 @@ func init() {
 func initWindow() *glfw.Window {
 	// glfw hint setup
 	hint := graphical.WindowHint()
-	hint.Title(Title)
-	hint.Size(1024, 1024/(AspectRatio))
+	hint.Title(base.Title)
+	hint.Size(1024, int(1024/base.AspectRatio))
 	hint.Resizable()
 
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)                //OpenGL大版本
@@ -43,7 +38,7 @@ func initWindow() *glfw.Window {
 	}
 
 	w.MakeContextCurrent()
-	w.SetSizeLimits(208, 208/(AspectRatio), gl.DONT_CARE, gl.DONT_CARE)
+	w.SetSizeLimits(208, int(1024/base.AspectRatio), gl.DONT_CARE, gl.DONT_CARE)
 	w.SetAspectRatio(16, 9)
 
 	// display env version
@@ -105,9 +100,9 @@ func MainLoop() {
 		log.Fatalln(err)
 	}
 
-	w.SetTitle(Title + ":(" + strconv.Itoa(int(width)) + "x" + strconv.Itoa(int(height)) + ")")
+	w.SetTitle(base.Title + ":(" + strconv.Itoa(int(width)) + "x" + strconv.Itoa(int(height)) + ")")
+
 	// glfw setting
-	backgroundColor := mgl32.Vec4{0.55, 0.55, 0.55, 0.0} // background color
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 	gl.Enable(gl.COLOR_WRITEMASK)
 	gl.Enable(gl.DEPTH)
@@ -115,11 +110,11 @@ func MainLoop() {
 
 	// create background color
 	backgroundLoc := gl.GetUniformLocation(program, gl.Str("background\x00"))
-	bgR, bgG, bgB, bgA := backgroundColor.Elem()
+	bgR, bgG, bgB, bgA := base.BackgroundColor.Elem()
 
 	for !w.ShouldClose() {
 		// glfw background
-		gl.ClearColor(backgroundColor.Elem())               //状态设置
+		gl.ClearColor(base.BackgroundColor.Elem())          //状态设置
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) //状态使用
 
 		// render window

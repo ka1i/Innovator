@@ -10,7 +10,9 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/disintegration/imaging"
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/ka1i/innovator/internal/pkg/base"
 )
 
 func init() {
@@ -93,11 +95,16 @@ func NewTexture(file string) (uint32, int32, int32, error) {
 		return 0, width, height, err
 	}
 
-	rgba := image.NewRGBA(img.Bounds())
+	originSize := img.Bounds().Size()
+	newSize := base.UpdateAspectRatio(originSize)
+	bgImg := image.NewRGBA(image.Rect(0, 0, newSize.X, newSize.Y))
+	imgR := imaging.OverlayCenter(bgImg, img, 1)
+
+	rgba := image.NewRGBA(imgR.Bounds())
 	if rgba.Stride != rgba.Rect.Size().X*4 {
 		return 0, width, height, fmt.Errorf("unsupported stride")
 	}
-	flipImg := vFlip(img)
+	flipImg := vFlip(imgR)
 
 	width = int32(rgba.Rect.Size().X)
 	height = int32(rgba.Rect.Size().Y)
@@ -125,7 +132,7 @@ func NewTexture(file string) (uint32, int32, int32, error) {
 
 	gl.GenerateMipmap(gl.TEXTURE_2D)
 
-	return texture, width, height, nil
+	return texture, int32(originSize.X), int32(originSize.Y), nil
 }
 
 func vFlip(m image.Image) image.Image {
