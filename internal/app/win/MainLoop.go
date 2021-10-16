@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/ka1i/innovator/internal/app/events"
 	"github.com/ka1i/innovator/internal/app/graphical"
 )
@@ -19,8 +20,8 @@ func init() {
 func initWindow() *glfw.Window {
 	// glfw hint setup
 	hint := graphical.WindowHint()
-	hint.Title("Innovator: Hello World")
-	hint.Size(800, 600)
+	hint.Title("Image Viewer")
+	hint.Size(1024, 1024/(1920.0/1080.0))
 	hint.Resizable()
 
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)                //OpenGL大版本
@@ -46,9 +47,6 @@ func initWindow() *glfw.Window {
 	gl.Viewport(0, 0, int32(width), int32(height))
 	w.SetFramebufferSizeCallback(framebuffer_size_callback)
 
-	// disable vsync
-	glfw.SwapInterval(0)
-
 	return w
 }
 
@@ -69,14 +67,11 @@ func makeVAO() uint32 {
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
 
 	// position attribute
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
 	gl.EnableVertexAttribArray(0)
-	// color attribute
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(3*4))
-	gl.EnableVertexAttribArray(1)
 	// texture coord attribute
-	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
-	gl.EnableVertexAttribArray(2)
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+	gl.EnableVertexAttribArray(1)
 
 	return vao
 }
@@ -93,17 +88,15 @@ func MainLoop() {
 	vao := makeVAO()
 
 	// Load the texture
-	texture1, err := graphical.NewTexture("container.jpeg")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	texture2, err := graphical.NewTexture("awesomeface.png")
+	texture1, err := graphical.NewTexture("example.png")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	//线框模式(Wireframe Mode)
-	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+	// glfw setting
+	backgroundColor := mgl32.Vec4{0.55, 0.55, 0.55, 0.0} // background color
+	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+	gl.Enable(gl.COLOR_WRITEMASK)
 
 	var fps uint = 0
 	fpsTracker := glfw.GetTime()
@@ -118,8 +111,8 @@ func MainLoop() {
 		fps++
 
 		// glfw background
-		gl.ClearColor(0.2, 0.3, 0.4, 1)                     //状态设置
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) //状态使用
+		gl.ClearColor(backgroundColor.Elem()) //状态设置
+		gl.Clear(gl.COLOR_BUFFER_BIT)         //状态使用
 
 		// event process
 		events.Keyboard(w)
@@ -127,15 +120,16 @@ func MainLoop() {
 		// render window
 		gl.UseProgram(program)
 
+		// update background color
+		backgroundLoc := gl.GetUniformLocation(program, gl.Str("background\x00"))
+		bgR, bgG, bgB, bgA := backgroundColor.Elem()
+		gl.Uniform4f(backgroundLoc, bgR, bgG, bgB, bgA)
+
 		// texture unit
 		gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("texture1\x00")), 0)
-		gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("texture2\x00")), 1)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, texture1)
-
-		gl.ActiveTexture(gl.TEXTURE1)
-		gl.BindTexture(gl.TEXTURE_2D, texture2)
 
 		// bind vao
 		gl.BindVertexArray(vao)

@@ -3,11 +3,11 @@ package win
 var (
 	//顶点输入
 	vertices = []float32{
-		//-- 位置 --   ---- 颜色 ----  - 纹理坐标 -
-		0.5, 0.5, 0.0, 0.2, 0.0, 0.2, 1.0, 1.0,
-		0.5, -0.5, 0.0, 0.5, 0.5, 0.0, 1.0, 0.0,
-		-0.5, -0.5, 0.0, 0.0, 0.7, 0.7, 0.0, 0.0,
-		-0.5, 0.5, 0.0, 0.9, 0.0, 0.9, 0.0, 1.0,
+		//-- 位置 -- 纹理坐标 -
+		1, 1, 0.0, 1.0, 1.0,
+		1, -1, 0.0, 1.0, 0.0,
+		-1, -1, 0.0, 0.0, 0.0,
+		-1, 1, 0.0, 0.0, 1.0,
 	}
 	// //索引缓冲对象
 	indices = []int32{
@@ -21,33 +21,32 @@ const (
 	//顶点着色器
 	vertexShaderSource = `
 		#version 330 core
-		layout (location = 0) in vec3 aPos;   // 位置变量的属性位置值为 0 
-		layout (location = 1) in vec3 aColor; // 颜色变量的属性位置值为 1
-		layout (location = 2) in vec2 aTexCoord;
+		layout (location = 0) in vec3 aPos;
+		layout (location = 1) in vec2 aTexCoord;
 
-		out vec3 vertexColor;
-		out vec2 TexCoord;
+		out vec2 uv;
 
 		void main()
 		{
 			gl_Position = vec4(aPos, 1.0);
-			vertexColor = aColor;
-			TexCoord = aTexCoord;
+			uv = aTexCoord;
 		}	
 	` + "\x00"
 	//片段着色器
 	fragmentShaderSource = `
 		#version 330 core
 		out vec4 fragmentColor;
-		in vec3 vertexColor; // 从顶点着色器传来的输入变量（名称相同、类型相同）
-		in vec2 TexCoord;
+		in vec2 uv;
 
 		uniform sampler2D texture1;
-		uniform sampler2D texture2;
+
+		out vec4 base;
+		uniform vec4 background;
 
 		void main()
 		{
-			fragmentColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2) * vec4(vertexColor, 1.0);
+			base = texture(texture1, uv);
+			fragmentColor = vec4(mix(background.xyz, base.rgb, max(background.w, base.a)), 1.0);
 		} 
 	` + "\x00"
 )
