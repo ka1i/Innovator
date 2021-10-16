@@ -82,21 +82,25 @@ func NewProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error)
 	return program, nil
 }
 
-func NewTexture(file string) (uint32, error) {
+func NewTexture(file string) (uint32, int32, int32, error) {
+	var width, height int32
 	imgFile, err := os.Open(file)
 	if err != nil {
-		return 0, fmt.Errorf("texture %q not found on disk: %v", file, err)
+		return 0, width, height, fmt.Errorf("texture %q not found on disk: %v", file, err)
 	}
 	img, _, err := image.Decode(imgFile)
 	if err != nil {
-		return 0, err
+		return 0, width, height, err
 	}
 
 	rgba := image.NewRGBA(img.Bounds())
 	if rgba.Stride != rgba.Rect.Size().X*4 {
-		return 0, fmt.Errorf("unsupported stride")
+		return 0, width, height, fmt.Errorf("unsupported stride")
 	}
 	flipImg := vFlip(img)
+
+	width = int32(rgba.Rect.Size().X)
+	height = int32(rgba.Rect.Size().Y)
 
 	draw.Draw(rgba, rgba.Bounds(), flipImg, image.Point{0, 0}, draw.Src)
 
@@ -112,8 +116,8 @@ func NewTexture(file string) (uint32, error) {
 		gl.TEXTURE_2D,
 		0,
 		gl.RGBA,
-		int32(rgba.Rect.Size().X),
-		int32(rgba.Rect.Size().Y),
+		width,
+		height,
 		0,
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
@@ -121,7 +125,7 @@ func NewTexture(file string) (uint32, error) {
 
 	gl.GenerateMipmap(gl.TEXTURE_2D)
 
-	return texture, nil
+	return texture, width, height, nil
 }
 
 func vFlip(m image.Image) image.Image {

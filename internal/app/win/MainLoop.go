@@ -3,12 +3,18 @@ package win
 import (
 	"log"
 	"runtime"
+	"strconv"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 	"github.com/ka1i/innovator/internal/app/events"
 	"github.com/ka1i/innovator/internal/app/graphical"
+)
+
+const (
+	Title       = "Image Viewer"
+	AspectRatio = 16.0 / 9.0
 )
 
 func init() {
@@ -20,8 +26,8 @@ func init() {
 func initWindow() *glfw.Window {
 	// glfw hint setup
 	hint := graphical.WindowHint()
-	hint.Title("Image Viewer")
-	hint.Size(1024, 1024/(1920.0/1080.0))
+	hint.Title(Title)
+	hint.Size(1024, 1024/(AspectRatio))
 	hint.Resizable()
 
 	glfw.WindowHint(glfw.ContextVersionMajor, 3)                //OpenGL大版本
@@ -37,6 +43,8 @@ func initWindow() *glfw.Window {
 	}
 
 	w.MakeContextCurrent()
+	w.SetSizeLimits(208, 208/(AspectRatio), gl.DONT_CARE, gl.DONT_CARE)
+	w.SetAspectRatio(16, 9)
 
 	// display env version
 	log.Printf("GLFW: %s \n", glfw.GetVersionString())
@@ -46,6 +54,12 @@ func initWindow() *glfw.Window {
 	width, height := w.GetFramebufferSize()
 	gl.Viewport(0, 0, int32(width), int32(height))
 	w.SetFramebufferSizeCallback(framebuffer_size_callback)
+
+	// events register
+	w.SetFramebufferSizeCallback(events.FramebufferSizeCallback)
+	w.SetKeyCallback(events.KeyCallback)
+	w.SetMouseButtonCallback(events.MouseButtonCallback)
+	w.SetCursorPosCallback(events.CursorPosCallback)
 
 	return w
 }
@@ -88,45 +102,36 @@ func MainLoop() {
 	vao := makeVAO()
 
 	// Load the texture
-	texture1, err := graphical.NewTexture("example.png")
+	texture1, width, height, err := graphical.NewTexture("example.png")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	w.SetTitle(Title + ":(" + strconv.Itoa(int(width)) + "x" + strconv.Itoa(int(height)) + ")")
 	// glfw setting
 	backgroundColor := mgl32.Vec4{0.55, 0.55, 0.55, 0.0} // background color
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 	gl.Enable(gl.COLOR_WRITEMASK)
+	gl.Enable(gl.DEPTH)
+	gl.DepthFunc(gl.LESS)
 
-	var fps uint = 0
-	fpsTracker := glfw.GetTime()
+	// create background color
+	backgroundLoc := gl.GetUniformLocation(program, gl.Str("background\x00"))
+	bgR, bgG, bgB, bgA := backgroundColor.Elem()
+
 	for !w.ShouldClose() {
-		// fps
-		currentTime := glfw.GetTime()
-		if currentTime-fpsTracker >= 1.0 {
-			log.Printf("fps:%d/s\n", fps)
-			fpsTracker = currentTime
-			fps = 0
-		}
-		fps++
-
 		// glfw background
-		gl.ClearColor(backgroundColor.Elem()) //状态设置
-		gl.Clear(gl.COLOR_BUFFER_BIT)         //状态使用
-
-		// event process
-		events.Keyboard(w)
+		gl.ClearColor(backgroundColor.Elem())               //状态设置
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) //状态使用
 
 		// render window
 		gl.UseProgram(program)
 
-		// update background color
-		backgroundLoc := gl.GetUniformLocation(program, gl.Str("background\x00"))
-		bgR, bgG, bgB, bgA := backgroundColor.Elem()
-		gl.Uniform4f(backgroundLoc, bgR, bgG, bgB, bgA)
-
 		// texture unit
 		gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("texture1\x00")), 0)
+
+		// update background color
+		gl.Uniform4f(backgroundLoc, bgR, bgG, bgB, bgA)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, texture1)
