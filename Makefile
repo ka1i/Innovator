@@ -1,4 +1,4 @@
-PREFIX  := innovator
+PREFIX  := iv
 SOURCE  := cmd/${PREFIX}/main.go
 BINARY  := bin/${PREFIX}
 

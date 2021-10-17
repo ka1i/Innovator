@@ -1,4 +1,4 @@
-# Innovator
+# Innovator :ImageViewer
 
 + MacOS openGL(GLFW) simple Image Viewer
 
@@ -9,12 +9,12 @@ make
 
 ## Quick
 ```
-./bin/innovator -f example.png
+./bin/iv -f example.png
 ```
 
 ## Usage
 ```bash
-./bin/innovator -h
+./bin/iv -h
 ```
 
 ## Credits
