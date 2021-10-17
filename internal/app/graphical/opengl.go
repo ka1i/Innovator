@@ -97,18 +97,12 @@ func NewTexture(file string) (uint32, int32, int32, error) {
 	originSize := img.Bounds().Size()
 	newSize := base.UpdateAspectRatio(originSize)
 	bgImg := image.NewRGBA(image.Rect(0, 0, newSize.X, newSize.Y))
-	imgR := OverlayCenter(bgImg, img, 1)
-
-	rgba := image.NewRGBA(imgR.Bounds())
-	if rgba.Stride != rgba.Rect.Size().X*4 {
-		return 0, width, height, fmt.Errorf("unsupported stride")
-	}
-	flipImg := vFlip(imgR)
+	rgba := OverlayCenter(bgImg, img, 1)
 
 	width = int32(rgba.Rect.Size().X)
 	height = int32(rgba.Rect.Size().Y)
 
-	draw.Draw(rgba, rgba.Bounds(), flipImg, image.Point{0, 0}, draw.Src)
+	draw.Draw(rgba, rgba.Bounds(), rgba, image.Point{0, 0}, draw.Src)
 
 	var texture uint32
 	gl.GenTextures(1, &texture)
@@ -132,16 +126,4 @@ func NewTexture(file string) (uint32, int32, int32, error) {
 	gl.GenerateMipmap(gl.TEXTURE_2D)
 
 	return texture, int32(originSize.X), int32(originSize.Y), nil
-}
-
-func vFlip(m image.Image) image.Image {
-	mb := m.Bounds()
-	flip := image.NewRGBA(image.Rect(0, 0, mb.Dx(), mb.Dy()))
-	for x := mb.Min.X; x < mb.Max.X; x++ {
-		for y := mb.Min.Y; y < mb.Max.Y; y++ {
-			// 设置像素点，此调换了Y坐标以达到垂直翻转的目的
-			flip.Set(x, mb.Max.Y-y, m.At(x, y))
-		}
-	}
-	return flip
 }

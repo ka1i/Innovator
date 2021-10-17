@@ -7,6 +7,9 @@ func Usage() {
 	fmt.Println(`Usage: innovator -[hv]
 
      ------- < Commands Arguments > -------
+argument:
+  -f, file          app required image source. 
+
 optional:
   -h, help          Show this help message. 
   -v, version       Show the app version. 

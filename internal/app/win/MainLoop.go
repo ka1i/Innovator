@@ -2,6 +2,7 @@ package win
 
 import (
 	"log"
+	"path/filepath"
 	"runtime"
 	"strconv"
 
@@ -18,72 +19,7 @@ func init() {
 	runtime.LockOSThread()
 }
 
-func initWindow() *glfw.Window {
-	// glfw hint setup
-	hint := graphical.WindowHint()
-	hint.Title(base.Title)
-	hint.Size(1024, int(1024/base.AspectRatio))
-	hint.Resizable()
-
-	glfw.WindowHint(glfw.ContextVersionMajor, 3)                //OpenGL大版本
-	glfw.WindowHint(glfw.ContextVersionMinor, 3)                //OpenGl小版本
-	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile) //明确核心模式
-	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)    //Mac使用
-
-	// init glfw window
-	window := graphical.CreateWindow(hint)
-	w, err := window()
-	if err != nil {
-		panic(err)
-	}
-
-	w.MakeContextCurrent()
-	w.SetSizeLimits(208, int(1024/base.AspectRatio), gl.DONT_CARE, gl.DONT_CARE)
-	w.SetAspectRatio(16, 9)
-
-	// display env version
-	log.Printf("GLFW: %s \n", glfw.GetVersionString())
-	log.Printf("openGL: %s \n", gl.GoStr(gl.GetString(gl.VERSION)))
-
-	// openGL viewport init
-	width, height := w.GetFramebufferSize()
-	gl.Viewport(0, 0, int32(width), int32(height))
-	w.SetFramebufferSizeCallback(framebuffer_size_callback)
-
-	// events register
-	w.SetFramebufferSizeCallback(events.FramebufferSizeCallback)
-	w.SetKeyCallback(events.KeyCallback)
-
-	return w
-}
-
-func makeVAO() uint32 {
-	//连接顶点属性
-	var vao uint32
-	gl.GenVertexArrays(1, &vao)
-	gl.BindVertexArray(vao)
-
-	var vbo uint32
-	gl.GenBuffers(1, &vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
-
-	var ebo uint32
-	gl.GenBuffers(1, &ebo)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
-
-	// position attribute
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
-	gl.EnableVertexAttribArray(0)
-	// texture coord attribute
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
-	gl.EnableVertexAttribArray(1)
-
-	return vao
-}
-
-func MainLoop() {
+func MainLoop(imgFile string) {
 	w := initWindow()
 
 	// Render Loop
@@ -95,12 +31,12 @@ func MainLoop() {
 	vao := makeVAO()
 
 	// Load the texture
-	texture1, width, height, err := graphical.NewTexture("example.png")
+	texture1, width, height, err := graphical.NewTexture(imgFile)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	w.SetTitle(base.Title + ":(" + strconv.Itoa(int(width)) + "x" + strconv.Itoa(int(height)) + ")")
+	w.SetTitle(base.Title + " (" + filepath.Base(imgFile) + ":" + strconv.Itoa(int(width)) + "x" + strconv.Itoa(int(height)) + ")")
 
 	// glfw setting
 	gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
@@ -140,6 +76,67 @@ func MainLoop() {
 	glfw.Terminate()
 }
 
-func framebuffer_size_callback(window *glfw.Window, width int, height int) {
+func initWindow() *glfw.Window {
+	// glfw hint setup
+	hint := graphical.WindowHint()
+	hint.Title(base.Title)
+	hint.Size(1024, int(1024/base.AspectRatio))
+	hint.Resizable()
+
+	glfw.WindowHint(glfw.ContextVersionMajor, 3)                //OpenGL大版本
+	glfw.WindowHint(glfw.ContextVersionMinor, 3)                //OpenGl小版本
+	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile) //明确核心模式
+	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)    //Mac使用
+
+	// init glfw window
+	window := graphical.CreateWindow(hint)
+	w, err := window()
+	if err != nil {
+		panic(err)
+	}
+
+	w.MakeContextCurrent()
+	w.SetSizeLimits(208, int(1024/base.AspectRatio), gl.DONT_CARE, gl.DONT_CARE)
+	w.SetAspectRatio(16, 9)
+
+	// display env version
+	log.Printf("GLFW: %s \n", glfw.GetVersionString())
+	log.Printf("openGL: %s \n", gl.GoStr(gl.GetString(gl.VERSION)))
+
+	// openGL viewport init
+	width, height := w.GetFramebufferSize()
 	gl.Viewport(0, 0, int32(width), int32(height))
+	w.SetFramebufferSizeCallback(events.FramebufferSizeCallback)
+
+	// events register
+	w.SetFramebufferSizeCallback(events.FramebufferSizeCallback)
+	w.SetKeyCallback(events.KeyCallback)
+
+	return w
+}
+
+func makeVAO() uint32 {
+	//连接顶点属性
+	var vao uint32
+	gl.GenVertexArrays(1, &vao)
+	gl.BindVertexArray(vao)
+
+	var vbo uint32
+	gl.GenBuffers(1, &vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
+
+	var ebo uint32
+	gl.GenBuffers(1, &ebo)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
+
+	// position attribute
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
+	gl.EnableVertexAttribArray(0)
+	// texture coord attribute
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
+	gl.EnableVertexAttribArray(1)
+
+	return vao
 }

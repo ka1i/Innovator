@@ -15,15 +15,12 @@ type app struct {
 	failure int
 }
 
-func (app *app) launch() int {
-	win.MainLoop()
-	return app.success
-}
-
 func (app *app) barry(argc int, argv []string) int {
 	var err error
 
 	switch argv[0] {
+	case "-f", "file":
+		win.MainLoop(argv[1])
 	case "-h", "--help", "help":
 		usage.Usage()
 	case "-v", "--version", "version":
@@ -54,7 +51,8 @@ func (app *app) Innovator() int {
 		var argv = os.Args[1:]
 		exitcode = app.barry(argc, argv)
 	} else {
-		exitcode = app.launch()
+		fmt.Println("innovator usage: innovator -h")
+		exitcode = app.failure
 	}
 	return exitcode
 }
