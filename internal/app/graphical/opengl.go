@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/disintegration/imaging"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/ka1i/innovator/internal/pkg/base"
 )
@@ -98,7 +97,7 @@ func NewTexture(file string) (uint32, int32, int32, error) {
 	originSize := img.Bounds().Size()
 	newSize := base.UpdateAspectRatio(originSize)
 	bgImg := image.NewRGBA(image.Rect(0, 0, newSize.X, newSize.Y))
-	imgR := imaging.OverlayCenter(bgImg, img, 1)
+	imgR := OverlayCenter(bgImg, img, 1)
 
 	rgba := image.NewRGBA(imgR.Bounds())
 	if rgba.Stride != rgba.Rect.Size().X*4 {
