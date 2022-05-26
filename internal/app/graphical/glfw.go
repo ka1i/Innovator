@@ -27,7 +27,7 @@ type hints struct {
 
 func WindowHint() *hints {
 	return &hints{
-		title:  "Innovator",
+		title:  "glfw3",
 		width:  1024,
 		height: 600,
 	}

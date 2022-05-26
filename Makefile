@@ -1,4 +1,4 @@
-PREFIX  := innovator
+PREFIX  := anime-engine
 SOURCE  := cmd/${PREFIX}/main.go
 BINARY  := bin/${PREFIX}
 

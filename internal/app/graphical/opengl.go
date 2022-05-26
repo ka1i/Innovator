@@ -10,7 +10,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/ka1i/innovator/internal/pkg/usage/utils"
 )
 
 func init() {
@@ -83,6 +84,7 @@ func NewProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error)
 }
 
 func NewTexture(file string) (uint32, error) {
+	var width, height int32
 	imgFile, err := os.Open(file)
 	if err != nil {
 		return 0, fmt.Errorf("texture %q not found on disk: %v", file, err)
@@ -92,44 +94,36 @@ func NewTexture(file string) (uint32, error) {
 		return 0, err
 	}
 
-	rgba := image.NewRGBA(img.Bounds())
-	if rgba.Stride != rgba.Rect.Size().X*4 {
-		return 0, fmt.Errorf("unsupported stride")
-	}
-	flipImg := vFlip(img)
+	originSize := img.Bounds().Size()
+	newSize := utils.UpdateAspectRatio(originSize)
+	bgImg := image.NewRGBA(image.Rect(0, 0, newSize.X, newSize.Y))
+	rgba := OverlayCenter(bgImg, img, 1)
 
-	draw.Draw(rgba, rgba.Bounds(), flipImg, image.Point{0, 0}, draw.Src)
+	width = int32(rgba.Rect.Size().X)
+	height = int32(rgba.Rect.Size().Y)
+
+	draw.Draw(rgba, rgba.Bounds(), rgba, image.Point{0, 0}, draw.Src)
 
 	var texture uint32
 	gl.GenTextures(1, &texture)
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_2D, texture)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_BORDER)
 	gl.TexImage2D(
 		gl.TEXTURE_2D,
 		0,
 		gl.RGBA,
-		int32(rgba.Rect.Size().X),
-		int32(rgba.Rect.Size().Y),
+		width,
+		height,
 		0,
 		gl.RGBA,
 		gl.UNSIGNED_BYTE,
 		gl.Ptr(rgba.Pix))
 
-	return texture, nil
-}
+	gl.GenerateMipmap(gl.TEXTURE_2D)
 
-func vFlip(m image.Image) image.Image {
-	mb := m.Bounds()
-	flip := image.NewRGBA(image.Rect(0, 0, mb.Dx(), mb.Dy()))
-	for x := mb.Min.X; x < mb.Max.X; x++ {
-		for y := mb.Min.Y; y < mb.Max.Y; y++ {
-			// 设置像素点，此调换了Y坐标以达到垂直翻转的目的
-			flip.Set(x, mb.Max.Y-y, m.At(x, y))
-		}
-	}
-	return flip
+	return texture, nil
 }

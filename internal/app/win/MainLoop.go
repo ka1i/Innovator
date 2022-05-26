@@ -4,10 +4,20 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 	"github.com/ka1i/innovator/internal/app/events"
 	"github.com/ka1i/innovator/internal/app/graphical"
+	"github.com/ka1i/innovator/internal/pkg/usage/utils"
+)
+
+const (
+	Title string = "Anime Engine"
+)
+
+var (
+	BackgroundColor mgl32.Vec4 = mgl32.Vec4{0.55, 0.55, 0.55, 0.0} // background color
 )
 
 func init() {
@@ -19,11 +29,12 @@ func init() {
 func initWindow() *glfw.Window {
 	// glfw hint setup
 	hint := graphical.WindowHint()
-	hint.Title("Innovator: Hello World")
+	hint.Title(Title)
+	hint.Size(1024, int(1024/utils.AspectRatio))
 	hint.Resizable()
 
-	glfw.WindowHint(glfw.ContextVersionMajor, 3)                //OpenGL大版本
-	glfw.WindowHint(glfw.ContextVersionMinor, 3)                //OpenGl小版本
+	glfw.WindowHint(glfw.ContextVersionMajor, 4)                //OpenGL大版本
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)                //OpenGl小版本
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile) //明确核心模式
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)    //Mac使用
 
@@ -35,6 +46,8 @@ func initWindow() *glfw.Window {
 	}
 
 	w.MakeContextCurrent()
+	w.SetSizeLimits(208, int(1024/utils.AspectRatio), gl.DONT_CARE, gl.DONT_CARE)
+	w.SetAspectRatio(16, 9)
 
 	// display env version
 	log.Printf("GLFW: %s \n", glfw.GetVersionString())
@@ -43,9 +56,12 @@ func initWindow() *glfw.Window {
 	// openGL viewport init
 	width, height := w.GetFramebufferSize()
 	gl.Viewport(0, 0, int32(width), int32(height))
-	w.SetFramebufferSizeCallback(framebuffer_size_callback)
 
-	// disable vsync
+	// events register
+	w.SetKeyCallback(events.KeyCallback)
+	w.SetFramebufferSizeCallback(events.FramebufferSizeCallback)
+
+	// disable vsync : default :0
 	glfw.SwapInterval(0)
 
 	return w
@@ -62,20 +78,9 @@ func makeVAO() uint32 {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(vertices), gl.STATIC_DRAW)
 
-	var ebo uint32
-	gl.GenBuffers(1, &ebo)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(indices), gl.STATIC_DRAW)
-
 	// position attribute
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(0))
 	gl.EnableVertexAttribArray(0)
-	// color attribute
-	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 8*4, gl.PtrOffset(3*4))
-	gl.EnableVertexAttribArray(1)
-	// texture coord attribute
-	gl.VertexAttribPointer(2, 2, gl.FLOAT, false, 8*4, gl.PtrOffset(6*4))
-	gl.EnableVertexAttribArray(2)
+	gl.VertexAttribPointerWithOffset(0, 4, gl.FLOAT, false, 4*4, 0)
 
 	return vao
 }
@@ -92,61 +97,59 @@ func MainLoop() {
 	vao := makeVAO()
 
 	// Load the texture
-	texture1, err := graphical.NewTexture("container.jpeg")
+	texture, err := graphical.NewTexture("example.png")
 	if err != nil {
 		log.Fatalln(err)
 	}
-	texture2, err := graphical.NewTexture("awesomeface.png")
-	if err != nil {
-		log.Fatalln(err)
-	}
+
+	width, height := w.GetFramebufferSize()
+
+	gl.UseProgram(program)
+
+	projection := mgl32.Ortho(0, float32(width), float32(height), 0, -1, 1) //mgl32.Mat4{}
 
 	//线框模式(Wireframe Mode)
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
+	gl.Enable(gl.COLOR_WRITEMASK)
+	gl.Enable(gl.DEPTH)
+	gl.DepthFunc(gl.LESS)
 
-	var fps uint = 0
-	fpsTracker := glfw.GetTime()
+	gl.BindFragDataLocation(program, 0, gl.Str("fragmentColor\x00"))
+
 	for !w.ShouldClose() {
-		// fps
-		currentTime := glfw.GetTime()
-		if currentTime-fpsTracker >= 1.0 {
-			log.Printf("fps:%d/s\n", fps)
-			fpsTracker = currentTime
-			fps = 0
-		}
-		fps++
-
 		// glfw background
-		gl.ClearColor(0.2, 0.3, 0.4, 1)                     //状态设置
+		gl.ClearColor(BackgroundColor.Elem())               //状态设置
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT) //状态使用
-
-		// event process
-		events.Keyboard(w)
 
 		// render window
 		gl.UseProgram(program)
 
 		// texture unit
-		gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("texture1\x00")), 0)
-		gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("texture2\x00")), 1)
+		gl.Uniform1i(gl.GetUniformLocation(program, gl.Str("imgtexture\x00")), 0)
 
 		gl.ActiveTexture(gl.TEXTURE0)
-		gl.BindTexture(gl.TEXTURE_2D, texture1)
+		gl.BindTexture(gl.TEXTURE_2D, texture)
 
-		gl.ActiveTexture(gl.TEXTURE1)
-		gl.BindTexture(gl.TEXTURE_2D, texture2)
+		// projection
+		projection = mgl32.Ortho(0, float32(width), float32(height), 0, -1, 1)
+
+		projectionLoc := gl.GetUniformLocation(program, gl.Str("projection\x00"))
+		gl.UniformMatrix4fv(projectionLoc, 1, false, &projection[0])
+
+		model := mgl32.Ident4()
+		model = model.Mul4(mgl32.Scale3D(float32(width)/2, float32(height)/2, 1))
+
+		modelLoc := gl.GetUniformLocation(program, gl.Str("model\x00"))
+		gl.UniformMatrix4fv(modelLoc, 1, false, &model[0])
 
 		// bind vao
 		gl.BindVertexArray(vao)
-		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+
+		gl.DrawArrays(gl.TRIANGLES, 0, 6)
 
 		//检查调用事件，交换缓冲
 		w.SwapBuffers()
 		glfw.PollEvents()
 	}
 	glfw.Terminate()
-}
-
-func framebuffer_size_callback(window *glfw.Window, width int, height int) {
-	gl.Viewport(0, 0, int32(width), int32(height))
 }
